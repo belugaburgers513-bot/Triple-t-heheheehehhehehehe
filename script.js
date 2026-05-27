@@ -51,6 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ── Start screen click — plays music, shows card ──────────────────
   function launch() {
+    if (startScreen.classList.contains('hidden')) return;
     startScreen.classList.add('hidden');
 
     // Show card
@@ -60,17 +61,10 @@ document.addEventListener('DOMContentLoaded', () => {
       { opacity: 1, y: 0, duration: 1, ease: 'power2.out' }
     );
 
-    // Play music — this MUST happen inside a user gesture
+    // Play music — inside user gesture so browser allows it
     bgMusic.volume = parseFloat(volumeSlider.value);
-    bgMusic.muted = false;
-    const playPromise = bgMusic.play();
-    if (playPromise !== undefined) {
-      playPromise.catch(() => {
-        // Retry once on failure
-        bgMusic.load();
-        bgMusic.play().catch(() => {});
-      });
-    }
+    bgMusic.currentTime = 0;
+    bgMusic.play().catch(() => {});
   }
 
   startScreen.addEventListener('click', launch);
