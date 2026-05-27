@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ashqryl</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: #000;
+            color: #fff;
+            overflow: hidden;
+            font-family: 'Courier New', monospace;
+        }
+
+        /* Custom cursor */
+        .custom-cursor {
+            position: fixed;
+            width: 40px; height: 40px;
+            background: url('assets/custom_cursor.png') no-repeat center/contain;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            display: none;
+        }
+        body:not(.touch-device) { cursor: none; }
+
+        /* Background video */
+        #background {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            object-fit: cover;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Overlays */
+        #hacker-overlay, #snow-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 3;
+        }
+
+        .hidden { display: none !important; }
+
+        /* START SCREEN */
+        #start-screen {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100vh;
+            background: rgba(0,0,0,0.92);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            cursor: pointer;
+        }
+        #start-text {
+            font-size: 24px;
+            color: #fff;
+            text-align: center;
+            letter-spacing: 2px;
+            text-shadow: 0 0 20px rgba(255,255,255,0.5);
+        }
+
+        /* MAIN CARD */
+        #profile-block {
+            position: fixed;
+            top: 80%; left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+        }
+
+        #dc-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        #dc-avatar-wrap {
+            position: relative;
+            width: 120px; height: 120px;
+        }
+
+        #dc-avatar {
+            width: 120px; height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid rgba(255,255,255,0.3);
+            box-shadow: 0 0 30px rgba(255,255,255,0.15);
+        }
+
+        #dc-status-dot {
+            position: absolute;
+            bottom: 6px; right: 6px;
+            width: 18px; height: 18px;
+            border-radius: 50%;
+            border: 3px solid #000;
+        }
+        .status-online  { background: #23a55a; box-shadow: 0 0 8px #23a55a; }
+        .status-idle    { background: #f0b232; box-shadow: 0 0 8px #f0b232; }
+        .status-dnd     { background: #f23f43; box-shadow: 0 0 8px #f23f43; }
+        .status-offline { background: #80848e; }
+
+        #dc-name {
+            font-size: 30px;
+            font-weight: bold;
+            letter-spacing: 4px;
+            color: #fff;
+            animation: glowPulse 2.5s ease-in-out infinite;
+        }
+
+        #dc-tagline {
+            font-size: 15px;
+            color: rgba(255,255,255,0.75);
+            letter-spacing: 2px;
+            font-style: italic;
+            text-shadow: 0 0 12px rgba(255,255,255,0.4);
+        }
+
+        #dc-activity {
+            font-size: 12px;
+            color: rgba(255,255,255,0.45);
+            letter-spacing: 1px;
+            min-height: 16px;
+        }
+
+        @keyframes glowPulse {
+            0%, 100% { text-shadow: 0 0 8px rgba(255,255,255,0.5); }
+            50%       { text-shadow: 0 0 22px rgba(255,255,255,1); }
+        }
+
+        /* Theme controls */
+        .controls {
+            position: fixed;
+            bottom: 20px; left: 50%;
+            transform: translateX(-50%);
+            display: flex; gap: 10px;
+            z-index: 20;
+            background: rgba(0,0,0,0.7);
+            padding: 5px 10px;
+            border-radius: 20px;
+            backdrop-filter: blur(5px);
+        }
+        .theme-button {
+            width: 30px; height: 30px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.3);
+            background: rgba(0,0,0,0.5);
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            color: #fff;
+            font-size: 14px; font-weight: bold;
+            transition: all 0.3s;
+        }
+        .theme-button:hover {
+            transform: scale(1.1);
+            border-color: rgba(255,255,255,0.8);
+        }
+
+        /* Volume control */
+        .top-controls {
+            position: fixed;
+            bottom: 70px; left: 50%;
+            transform: translateX(-50%);
+            display: flex; align-items: center; gap: 15px;
+            z-index: 20;
+            background: rgba(0,0,0,0.7);
+            padding: 8px 12px;
+            border-radius: 20px;
+            backdrop-filter: blur(5px);
+        }
+        .volume-control { display: flex; align-items: center; gap: 8px; }
+        .volume-icon { width: 20px; height: 20px; cursor: pointer; color: white; }
+        .slider {
+            -webkit-appearance: none;
+            width: 80px; height: 5px;
+            border-radius: 5px;
+            background: rgba(255,255,255,0.3);
+            outline: none;
+        }
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 12px; height: 12px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="home-theme">
+    <div class="custom-cursor" id="cursor"></div>
+
+    <!-- START SCREEN -->
+    <div id="start-screen">
+        <div id="start-text"></div>
+    </div>
+
+    <!-- BACKGROUND -->
+    <video id="background" autoplay loop muted playsinline>
+        <source src="assets/background.mp4" type="video/mp4">
+    </video>
+
+    <div id="hacker-overlay" class="hidden"></div>
+    <div id="snow-overlay" class="hidden"></div>
+
+    <!-- MAIN CARD -->
+    <div id="profile-block" class="hidden">
+        <div id="dc-card">
+            <div id="dc-avatar-wrap">
+                <img id="dc-avatar" src="https://cdn.discordapp.com/embed/avatars/0.png" alt="avatar">
+                <div id="dc-status-dot" class="status-offline"></div>
+            </div>
+            <div id="dc-name">ashqryl</div>
+            <div id="dc-tagline">Out here doing my own thing.</div>
+            <div id="dc-activity"></div>
+        </div>
+    </div>
+
+    <!-- AUDIO -->
+    <audio id="bg-music" loop src="assets/blinding_lights.mp3"></audio>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
